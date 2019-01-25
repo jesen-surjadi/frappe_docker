@@ -2,16 +2,15 @@ FROM alpine:3.8
 
 USER root
 
-RUN mkdir -p /redis_conf \
-   && mkdir -p /frappe_docker_conf \
-   mkdir -p /mariadb_conf
+RUN apk add --no-cache bash \
+   && mkdir -p /redis_conf /frappe_docker_conf/sites /mariadb_conf
 
 COPY redis-conf/ /redis_conf/
 
 COPY frappe-bench/ /frappe_docker_conf/
 
+COPY frappe-bench/sites/ /frappe_docker_conf/sites/
+
 COPY conf/mariadb-conf.d /mariadb_conf
 
 VOLUME ["/redis_conf", "/frappe_docker_conf", "/mariadb_conf"]
-
-
