@@ -13,8 +13,12 @@ elif [ "$1" == 'setup' ] && [ "$2" == 'docker' ]; then
             docker-compose up -d
         fi
 elif [ "$1" == 'setup' ] && [ "$2" == 'hosts' ]; then
-        docker exec -iu root frappe bash -c 'a=$(cd /home/frappe/frappe-bench && ls sites/*/site_config.json | grep -o "/.\+/"); a=${a//$"\n"/ }; a=$(echo $a | tr -d / ); result="127.0.0.1 ${a}"; echo ${result} | tee --append /etc/hosts'
-        docker exec -itu root frappe bash -c "printf '# User rules for frappe\nfrappe ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/frappe"
+    docker exec -iu root frappe bash -c 'a=$(cd /home/frappe/frappe-bench && ls sites/*/site_config.json | grep -o "/.\+/"); a=${a//$"\n"/ }; a=$(echo $a | tr -d / ); result="127.0.0.1 ${a}"; echo ${result} | tee --append /etc/hosts'
+    docker exec -itu root frappe bash -c "printf '# User rules for frappe\nfrappe ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/frappe"
+elif [ "$1" == 'setup' ] && [ "$2" == 'erpnext' ]; then
+    docker exec -i frappe bash -c "bench new-site site1.local"
+    docker exec -i frappe bash -c "bench get-app erpnext https://github.com/frappe/erpnext"
+    docker exec -i frappe bash -c "bench --site site1.local install-app erpnext"
 elif [ "$1" == '-c' ]; then
     shift
     user=$1
