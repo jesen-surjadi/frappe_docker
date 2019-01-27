@@ -1,6 +1,6 @@
 version: '2.1'
-services:
 
+services:
   shared-conf:
     volumes:
       - redis-conf:/redis_conf
@@ -9,11 +9,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.shared_conf
+    networks:
+      - backend
     command: ["sh", "-c", "tail -f /dev/null"]
     container_name: shared-conf
 
   mariadb:
     image: mariadb:10.3.12
+    networks:
+      - backend
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-123}
       - MYSQL_USER=root
@@ -28,6 +32,8 @@ services:
 
   redis-cache:
     image: redis:5.0.3-alpine3.8
+    networks:
+      - backend
     volumes:
       - redis-conf:/etc/conf.d
       - redis-cache-data:/data
@@ -38,6 +44,8 @@ services:
 
   redis-queue:
     image: redis:5.0.3-alpine3.8
+    networks:
+      - backend
     volumes:
       - redis-conf:/etc/conf.d
       - redis-queue-data:/data
@@ -48,6 +56,8 @@ services:
 
   redis-socketio:
     image: redis:5.0.3-alpine3.8
+    networks:
+      - backend
     volumes:
       - redis-conf:/etc/conf.d
       - redis-socketio-data:/data
@@ -63,10 +73,21 @@ services:
       - redis-conf:/home/frappe/frappe-bench/config
       - frappe-docker-conf:/home/frappe/frappe-docker-conf
     build: .
+    networks:
+      - backend
+      - frontend
     ports:
       - "8000:8000" #webserver_port
       - "9000:9000" #socketio_port
       - "6787:6787" #file_watcher_port
+    environment:
+      - VIRTUAL_HOST=${FRAPPE_VIRTUAL_HOST:-frappe.local}
+      - VIRTUAL_PORT=8000
+      - LETSENCRYPT_HOST=${FRAPPE_VIRTUAL_HOST:-frappe.local}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - LETSENCRYPT_TEST=true
+      - VIRTUAL_PROTO=https
+      - HTTPS_METHOD=redirect
     stdin_open: true
     tty: true
     links:
@@ -99,3 +120,9 @@ volumes:
     name: frappe-bench
   frappe-docker-conf:
     name: frappe-docker-conf
+
+networks:
+  backend:
+    external: true
+  frontend:
+    external: true
